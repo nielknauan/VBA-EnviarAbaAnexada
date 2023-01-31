@@ -1,0 +1,118 @@
+'HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+'Desenvolvido por: Nielk Nauan Carvalho dos Santos
+'Nome da Macro: EnviarAbaAnexadaFCL()
+'Data de Desenvolvimento: 27/01/2023
+'Função da Macro: enviar email automatico
+'HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+    
+Sub EnviarAbaAnexadaLCL()
+    
+    Dim OutApp As Object
+    Dim OutMail As Object
+    Dim Destinatario As String
+    Dim CC As String
+    Dim Assunto As String
+    Dim Mensagem As String
+    Dim Anexo As String
+    Dim NomeAnexo As String
+    Dim NomeAba As String
+    
+    ' Condições para o e-mail
+    
+    Destinatario = Cells(2, 8) & ", " & Cells(3, 8) & ", " & Cells(4, 8)
+    CC = Cells(2, 9).Value & ", " & Cells(3, 9).Value & ", " & Cells(4, 9).Value
+    Assunto = "Nova Instrução de Coleta " & Cells(4, 10).Value & " . " & Cells(4, 11).Value
+    Mensagem = "Prezados, Tudo bem?"
+    NomeAba = "LCL"
+    Anexo = "\\host1\Logistica\DOCUMENTOS - LOGISTICA\_Instrução de coleta" & Format(Now(), " yyyy-mm-dd - hh-mm") & "_Instrução de coleta.xlsx"
+    NomeAnexo = "Instrucao de coleta" & Format(Now(), "yyyy_mm_dd_hh-mm")
+    
+    ' Criar anexo e colar com valores
+    
+    ThisWorkbook.Sheets(4).Copy
+    ActiveWorkbook.Sheets(NomeAba).UsedRange.Value = ActiveWorkbook.Sheets(NomeAba).UsedRange.Value
+    ActiveWorkbook.SaveAs fileName:=Anexo
+    
+     ' Abrir o Oultlook
+     
+    Set OutApp = CreateObject("Outlook.Application")
+    Set OutMail = OutApp.CreateItem(0)
+    
+    OutMail.Display
+    
+    ' Corpo do e-mail
+    
+    With OutMail
+        .To = Destinatario
+        .CC = CC
+        .BCC = ""
+        .Subject = Assunto
+        .htmlbody = "<p><br></p><p>Prezados, Tudo bem?<br><p>Segue abaixo a instrução de coleta solicitada.<br></p>" & "Qualquer coisa estamos disposição<br>" & "Atenciosamente<br>" & .htmlbody
+        
+        
+        .Attachments.Add Anexo, 1, 1, NomeAnexo
+        
+    End With
+    
+    ActiveWorkbook.Close
+    
+    Set OutMail = Nothing
+    Set OutApp = Nothing
+    
+    End Sub
+
+Sub McrGerarPlanilhaResumo()
+
+Dim strNovaPlanilha As String
+Dim strDiretorio As String
+Dim strPlanilhaAtual, strresposta As String
+Dim i, intNumeroDePlanilhas As Integer
+
+' Criar novo arquivo e salvar com formatação correta.
+
+    strDiretorio = ActiveWorkbook.Path
+        Sheets(Array("LCL")).Copy
+        ActiveWorkbook.SaveAs fileName:= _
+            strDiretorio & "/Instrução de coleta (LCL) -" & Format(Now(), " yyyy-mm-dd - hh-mm") & ".xlsx" _
+            , FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
+    Range("H1").Select
+    
+    strNovaPlanilha = ActiveWorkbook.Name
+    Sheets(1).Select
+    i = 1
+    intNumeroDePlanilhas = ActiveWorkbook.Worksheets.Count
+        For i = 1 To intNumeroDePlanilhas
+            Cells.Select
+            Selection.Copy
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+            Range("A1").Select
+            If (i < intNumeroDePlanilhas) Then
+                ActiveSheet.Next.Select
+            End If
+    Next
+    
+    ' Mensagem de sucesso
+    
+    Sheets(1).Select
+    strresposta = MsgBox("Resumo gerado com Sucesso!", vbOKOnly + vbExclamation, "Alerta")
+    
+End Sub
+
+Sub LCL()
+
+Application.ScreenUpdating = False
+
+Call EnviarAbaAnexadaLCL
+Call McrGerarPlanilhaResumo
+
+Application.ScreenUpdating = True
+
+
+' Gerar ambas as macros
+
+
+End Sub
+
+
+
